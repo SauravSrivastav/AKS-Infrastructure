@@ -1,0 +1,78 @@
+Step1: Creating a service principal
+       In the Azure version of SPN , even if thesubscription is changed, can you maintain the authority to operate from azure-cli.
+ 
+> az ad sp create-for-rbac --skip-assignment
+> az ad sp create-for-rbac --name equinorspn
+
+{
+  "appId": "9e72d0f5-77cd-45dd-a252-816c4f289398",
+  "displayName": "equinorspn",
+  "name": "http://equinorspn",
+  "password": "ab975a17-0460-4ed4-a986-bc78e0706401",
+  "tenant": "214afa4d-d9b0-4cc4-9497-06abd7cbc5ea"
+}
+
+The above values ??can be confirmed from the following command.(Search the output file based on "azure-cli-" of displayName)
+> az ad sp list> sp_list.txt
+
+Once created, it can be reused because it remains, even if ResourceGroup is deleted.
+However, if you do not write down the password, you cannot reuse it.
+
+In that case, delete and re-create using the following command.
+> az ad sp delete --id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+
+
+Step2: Grant authority to ACR.
+
+> az acr show --resource-group equinorproject --name equinoracr --query "id" --output tsv
+
+
+
+Step3: Grant ACR acrpull privileges to the service principal.
+
+appId: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+AcrId:./Subscriptions/xxxxxxxxxxxx-Xxxxxxxx-xxxxxxxxxxxx/ResourceGroups/equinorproject/Providers/Microsoft ContainerRegistry/Registries/equinoracr
+
+/subscriptions/a2ca6b0c-2592-420a-be30-b1cbe1da7646/resourceGroups/equinorproject/providers/Microsoft.ContainerRegistry/registries/equinoracr
+
+> az role assignment create --assignee "<appId>" --scope "<acrId>" --role acrpull
+
+> az role assignment create --assignee "9e72d0f5-77cd-45dd-a252-816c4f289398" --scope "./subscriptions/a2ca6b0c-2592-420a-be30-b1cbe1da7646/resourceGroups/equinorproject/providers/Microsoft.ContainerRegistry/registries/equinoracr" --role acrpull
+
+
+
+Step 4: Creating a cluster During creation, an SSH key is created in the user directory under .ssh.
+appId: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+password: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+{
+  "appId": "9e72d0f5-77cd-45dd-a252-816c4f289398",
+  "displayName": "equinorspn",
+  "name": "http://equinorspn",
+  "password": "ab975a17-0460-4ed4-a986-bc78e0706401",
+  "tenant": "214afa4d-d9b0-4cc4-9497-06abd7cbc5ea"
+}
+
+> az aks create --resource-group equinorproject --name equinoroaks --node-count 2 --service-principal <appId> --client-secret ab975a17-0460-4ed4-a986-bc78e0706401 --generate-ssh-keys
+
+
+Step5: Connect to cluster(requires Kubernetes CLI installed)
+
+> az aks get-credentials --resource-group equinorproject --name equinoroaks
+> kubectl get nodes
+> kubectl get nodes -o wide
+> kubectl describe node <NodeName>
+> kubectl version
+> kubectl cluster-info
+> List of clusters(when there are multiple clusters) :kubectl config get-contexts
+> kubectl get namespaces
+> kubectl get services -o wide
+> Check from K8s dashboard: Grant authority.
+> kubectl create clusterrolebinding kubernetes-dashboard --clusterrole = cluster-admin --serviceaccount = kube-system: kubernetes-dashboard
+
+Access the above “kubernetes-dashboard” URL via Proxy.
+> az aks browse --resource-group equinorproject --name equinoroaks
+
+
+ 

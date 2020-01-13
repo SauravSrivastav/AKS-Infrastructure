@@ -1,0 +1,60 @@
+Multiple Node Pool:
+
+First, install the necessary tools.
+
+1. Check the version of Azure CLI. If the version is older than 2.0.61 , install the latest version from the Azure CLI installation.
+
+> az --version 
+
+2. Install the aks-preview extension.
+
+# Install & Update the aks-preview extension 
+az extension add --name aks-preview
+
+# Update the extension to make sure you have the latest version installed 
+az extension update --name aks-preview
+
+3. Enable MultiAgentpoolPreview.
+
+az feature register --name MultiAgentpoolPreview --namespace Microsoft.ContainerService
+
+4. Renew your provider's registration to take advantage of the preview feature you have enabled.
+
+az provider register --namespace Microsoft.ContainerService
+
+5. Create a service principal.
+
+az ad sp create-for-rbac --skip-assignment
+
+6. Get the resource name of the existing ACR.
+
+az acr show --resource-group netcoresample --name kenakamuacr --query  "id"  --output tsv  
+
+7. Grant ACR pull authority to the created service principal.
+
+az role assignment create --assignee <appId> --scope <acrId> --role acrpull
+
+
+
+**********************************************************************************
+                                  Creating a cluster
+**********************************************************************************
+1. Create a cluster with the az aks create command. appId and password use the values ??obtained when creating the service principal. For the load balancer , select Standard as described in the documentation .
+
+az aks create -g netcoresample \ 
+-n myaks -c 2 \ 
+--service-principal <appId> \ 
+--client-secret <password> \ 
+--generate-ssh-keys  \ 
+--vm-set-type VirtualMachineScaleSets \ 
+- -load-balancer-sku standard
+
+2. After creating the cluster, obtain the current node pool and confirm that it is created with the default Standard_DS2_v2.
+
+> az aks nodepool list -g netcoresample --cluster-name myaks
+
+Create a new node pool. Here, specify Standard_DS1_v2 for the new pool.
+
+az aks nodepool add -g equinorproject --cluster-name equinoroaks --name nodepool2 -c 1 --node-vm-size Standard_DS1_v2
+
+

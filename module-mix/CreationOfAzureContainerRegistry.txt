@@ -1,0 +1,32 @@
+A) Create a container registry
+
+Prerequisites:  
+             az -v
+             az aks install-cli
+             set PATH =%PATH%;C:\Users\saurav\.azure-kubectl
+             kubectl version
+
+Step1: Login:
+       az login
+
+Step2: Review and Select Subscription:
+       > List - az account list
+       > Choice - az account set -s <subscription id>
+       > Verification - az account show
+
+Step3: Creating a resource group:
+       az group create --name equinorproject --location eastus
+
+Step4: Creating a container registry (ACR):
+        az acr create --resource-group equinorproject --name equinoracr --sku basic
+
+Step5: Login to Container Registry (ACR):
+       az acr login -n equinoracr
+
+Step6: Get the login server name of the container registry (ACR):
+        az acr list --resource-group equinorproject --query "[]. {acrLoginServer: loginServer}" --output table
+
+Step7: Check the image pushed to the container registry (ACR):
+       az acr repository list --name equinoracr --output table
+
+
