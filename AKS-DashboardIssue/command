@@ -1,3 +1,9 @@
 clusterrolebinding
 
-kubectl create clusterrolebinding kubernetes-dashboard -n kube-system --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
+
+ az aks get-credentials --resource-group cloudnative-rg --name hclcloudnativeaks
+ 
+ az aks browse --resource-group cloudnative-rg --name hclcloudnativeaks
+ 
+ 
+ kubectl create clusterrolebinding kubernetes-dashboard -n kube-system --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
